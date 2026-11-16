@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1f24">
+<title>Units</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #14171b; --card: #1f242a; --card2: #272d34; --line: #333a42;
+    --text: #eef1f4; --muted: #9aa4ae; --accent: #f2a93b; --accent-ink: #1b1305;
+    --good: #5cc98a; --warn: #f2a93b; --bad: #ef6b6b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { padding: env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom)); }
+  main { max-width: 520px; margin: 0 auto; padding: 12px 16px; }
+  h1 { font-size: 20px; margin: 4px 0 12px; }
+  h2 { font-size: 15px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { min-width: 0; }
+  .grow { flex: 1; }
+  select, input { width: 100%; font: inherit; color: var(--text); background: var(--card2);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    background: var(--card2); color: var(--text); }
+  button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  button.big { width: 100%; padding: 16px; font-size: 18px; margin-top: 10px; }
+  button.danger { color: var(--bad); }
+  button.small { padding: 8px 12px; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { background: var(--card2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--card2); border-radius: 10px; padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .bar { height: 10px; background: var(--card2); border-radius: 99px; overflow: hidden; margin: 12px 0 4px; }
+  .bar > div { height: 100%; background: var(--good); border-radius: 99px; transition: width .3s; }
+  .muted { color: var(--muted); font-size: 13px; }
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+  ul.list li:first-child { border-top: 0; }
+  ul.list .t { flex: 1; min-width: 0; }
+  ul.list .t div:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+  .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 140px; margin-top: 8px; }
+  .day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+  .day .col { width: 100%; border-radius: 6px 6px 2px 2px; background: var(--accent); min-height: 2px; }
+  .day .col.af { background: var(--good); height: 6px !important; }
+  .day .col.none { background: var(--line); height: 2px !important; }
+  .day small { font-size: 11px; color: var(--muted); }
+  .day .v { font-size: 11px; font-variant-numeric: tabular-nums; }
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #101316;
+    border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  nav.tabs button { flex: 1; background: none; border-radius: 0; padding: 14px 0 16px; color: var(--muted); font-weight: 600; }
+  nav.tabs button.on { color: var(--accent); }
+  .hidden { display: none !important; }
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--card2);
+    border: 1px solid var(--line); padding: 10px 16px; border-radius: 10px; display: flex; gap: 12px; align-items: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4); z-index: 10; width: max-content; max-width: calc(100% - 32px); }
+  .toast button { padding: 6px 10px; color: var(--accent); background: none; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: right; padding: 8px 4px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  th { color: var(--muted); font-weight: 600; border-top: 0; }
+  th:first-child, td:first-child { text-align: left; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+</style>
+</head>
+<body>
+<main>
+
+<!-- TODAY -->
+<section id="tab-today">
+  <div class="card">
+    <h2>Log a drink</h2>
+    <select id="drinkSelect" aria-label="Drink"></select>
+    <div class="row" style="margin-top:8px">
+      <div class="grow">
+        <label for="logDay" style="margin-top:0">Day</label>
+        <input type="date" id="logDay">
+      </div>
+      <div style="width:96px">
+        <label for="logQty" style="margin-top:0">How many</label>
+        <input type="number" id="logQty" min="1" max="20" value="1" inputmode="numeric">
+      </div>
+    </div>
+    <button class="primary big" id="addBtn">+ Add</button>
+    <div class="chips" id="quickChips"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="todayTitle">Today</h2>
+    <div class="stats">
+      <div class="stat"><b id="tUnits">0</b><span>units</span></div>
+      <div class="stat"><b id="tKcal">0</b><span>kcal</span></div>
+      <div class="stat"><b id="tCount">0</b><span>drinks</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>This week (Mon–Sun)</h2>
+    <div class="stats">
+      <div class="stat"><b id="wUnits">0</b><span>units of 14</span></div>
+      <div class="stat"><b id="wKcal">0</b><span>kcal</span></div>
+      <div class="stat"><b id="wAF">0</b><span>alcohol-free days</span></div>
+    </div>
+    <div class="bar"><div id="wBar"></div></div>
+    <div class="muted" id="wNote"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="dayListTitle">Drinks today</h2>
+    <ul class="list" id="todayList"></ul>
+    <div class="muted" id="todayEmpty">Nothing logged.</div>
+  </div>
+</section>
+
+<!-- WEEK -->
+<section id="tab-week" class="hidden">
+  <div class="card">
+    <div class="week-nav">
+      <button class="small" id="prevWeek">‹ Prev</button>
+      <b id="weekLabel"></b>
+      <button class="small" id="nextWeek">Next ›</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="vwUnits">0</b><span>units</span></div>
+      <div class="stat"><b id="vwKcal">0</b><span>kcal</span></div>
+      <div class="stat"><b id="vwAF">0</b><span>alcohol-free</span></div>
+    </div>
+    <div class="days" id="dayBars"></div>
+    <p class="muted">Green = alcohol-free day. Tap a day to see its drinks.</p>
+  </div>
+  <div class="card">
+    <h2>Recent weeks</h2>
+    <table>
+      <thead><tr><th>Week of</th><th>Units</th><th>kcal</th><th>AF days</th></tr></thead>
+      <tbody id="weeksTable"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>All time</h2>
+    <div class="stats">
+      <div class="stat"><b id="aAF">0</b><span>alcohol-free days</span></div>
+      <div class="stat"><b id="aStreak">0</b><span>current AF streak</span></div>
+      <div class="stat"><b id="aAvg">0</b><span>avg units / week</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DRINKS -->
+<section id="tab-drinks" class="hidden">
+  <div class="card">
+    <h2 id="formTitle">Add a drink</h2>
+    <label for="fName">Name</label>
+    <input id="fName" placeholder="e.g. Foster's">
+    <div class="grid2">
+      <div>
+        <label for="fServe">Serving</label>
+        <select id="fServe">
+          <option value="568">Pint (568ml)</option>
+          <option value="284">Half pint (284ml)</option>
+          <option value="440">Can 440ml</option>
+          <option value="500">Can 500ml</option>
+          <option value="568can">Large can 568ml</option>
+          <option value="330">Bottle/can 330ml</option>
+          <option value="custom">Other…</option>
+        </select>
+      </div>
+      <div>
+        <label for="fMl">Volume (ml)</label>
+        <input id="fMl" type="number" inputmode="numeric" value="568">
+      </div>
+      <div>
+        <label for="fAbv">Strength (ABV %)</label>
+        <input id="fAbv" type="number" inputmode="decimal" step="0.1" placeholder="4.0">
+      </div>
+      <div>
+        <label for="fKcal">kcal per 100ml</label>
+        <input id="fKcal" type="number" inputmode="decimal" step="1" placeholder="auto">
+      </div>
+    </div>
+    <p class="muted" id="fPreview">&nbsp;</p>
+    <div class="row">
+      <button class="primary grow" id="saveDrink">Save drink</button>
+      <button id="cancelEdit" class="hidden">Cancel</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>My drinks</h2>
+    <ul class="list" id="drinksList"></ul>
+    <p class="muted">Strengths change. Check the pump clip or can and edit if needed. Calories are estimated from strength unless you enter them.</p>
+  </div>
+
+  <div class="card">
+    <h2>Backup</h2>
+    <p class="muted" style="margin-top:0">Your log is only stored on this phone. Export a backup now and then.</p>
+    <div class="row">
+      <button class="grow" id="exportBtn">Export backup</button>
+      <button class="grow" id="importBtn">Import backup</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+  </div>
+</section>
+
+</main>
+
+<nav class="tabs">
+  <button data-tab="today" class="on">Today</button>
+  <button data-tab="week">Weeks</button>
+  <button data-tab="drinks">Drinks</button>
+</nav>
+
+<div class="toast hidden" id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
+
+<script>
+(() => {
+  const KEY = 'unitTracker.v1';
+  const WEEKLY_LIMIT = 14;
+  const DAY_ROLLOVER_HOUR = 5; // drinks before 5am count towards the previous day
+
+  // Estimated kcal per 100ml for lager from ABV (alcohol ~5.5 kcal per %/100ml, plus ~12 for carbs)
+  const estKcal = abv => Math.round(5.5 * abv + 12);
+
+  const SEED = [
+    // Pints (568ml)
+    ['Hawkstone Session', 568, 4.0],
+    ["Foster's", 568, 3.4],
+    ['Carling', 568, 3.4],
+    ['Coors', 568, 4.0],
+    ['Amstel', 568, 4.1],
+    ['Budweiser', 568, 4.5],
+    ['Stella Artois', 568, 4.6],
+    ['Madrí', 568, 4.6],
+    ['Birra Moretti', 568, 4.6],
+    ['Heineken', 568, 5.0],
+    ['Peroni', 568, 5.1],
+    ["Foster's", 284, 3.4],
+    // Cans & bottles
+    ["Foster's", 440, 3.4],
+    ["Foster's", 568, 3.4, null, 'Large can 568ml'],
+    ['Madrí', 440, 4.6],
+    ['Carling', 440, 3.4],
+    ['Budweiser', 440, 4.5],
+    ['Coors', 440, 4.0],
+    ['Stella Artois', 440, 4.6],
+    ['Hawkstone Session', 330, 4.0],
+    ['Budweiser', 330, 4.5],
+    ['Peroni', 330, 5.1],
+    ['Lucky Saint (alcohol-free)', 330, 0.5, 30],
+  ];
+
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const serveName = ml => ({568:'Pint',284:'Half',440:'Can 440ml',500:'Can 500ml',330:'330ml'}[ml] || ml + 'ml');
+  const serveOf = d => d.serve || serveName(d.ml);
+  const LARGE_CAN = 'Large can 568ml';
+  const drinkLabel = d => `${d.name} – ${serveOf(d)} (${d.abv}%)`;
+  const unitsOf = (ml, abv) => ml * abv / 1000;
+  const kcalOf = (ml, k) => ml * k / 100;
+  const fmtU = n => (Math.round(n * 10) / 10).toFixed(1);
+  const fmtK = n => Math.round(n).toLocaleString('en-GB');
+
+  // ---- dates (local time, YYYY-MM-DD keys) ----
+  const pad = n => String(n).padStart(2, '0');
+  const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
+  const drinkingDay = () => { const d = new Date(); if (d.getHours() < DAY_ROLLOVER_HOUR) d.setDate(d.getDate() - 1); return keyOf(d); };
+  const mondayOf = k => { const d = parseKey(k); const dow = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dow); return keyOf(d); };
+  const niceDay = k => parseKey(k).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // ---- state ----
+  let state;
+  function load() {
+    try { state = JSON.parse(localStorage.getItem(KEY)); } catch { state = null; }
+    const fromSeed = ([name, ml, abv, k, serve]) =>
+      ({ id: uid(), name, ml, abv, kcal100: k ?? estKcal(abv), ...(serve ? { serve } : {}) });
+    if (!state || !Array.isArray(state.drinks)) {
+      state = { drinks: SEED.map(fromSeed), log: [], startDay: drinkingDay(), seedV: SEED_VERSION };
+      save();
+    } else if ((state.seedV || 1) < SEED_VERSION) {
+      // add drinks introduced in later versions, without touching the user's own list
+      SEED_ADDED.forEach(s => {
+        if (!state.drinks.some(d => d.name === s[0] && d.ml === s[1] && (d.serve || null) === (s[4] || null)))
+          state.drinks.push(fromSeed(s));
+      });
+      state.seedV = SEED_VERSION;
+      save();
+    }
+  }
+  const SEED_VERSION = 2;
+  const SEED_ADDED = [["Foster's", 568, 3.4, null, 'Large can 568ml'], ['Madrí', 440, 4.6]];
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { alert('Could not save: ' + e.message); }
+  }
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+  // ---- aggregates ----
+  function dayTotals(k) {
+    const items = state.log.filter(e => e.day === k);
+    return { items, units: items.reduce((s, e) => s + e.units, 0), kcal: items.reduce((s, e) => s + e.kcal, 0) };
+  }
+  // A day counts as alcohol-free once it's over, is on/after tracking started, and has no (alcoholic) drinks.
+  function isAF(k, today) {
+    if (k >= today || k < state.startDay) return null; // not countable
+    return dayTotals(k).units < 0.05; // allow alcohol-free beers (<0.5%) without breaking an AF day
+  }
+  function weekTotals(mon, today) {
+    let units = 0, kcal = 0, af = 0, counted = 0;
+    for (let i = 0; i < 7; i++) {
+      const k = addDays(mon, i), t = dayTotals(k);
+      units += t.units; kcal += t.kcal;
+      const a = isAF(k, today);
+      if (a !== null) { counted++; if (a) af++; }
+    }
+    return { units, kcal, af, counted };
+  }
+
+  // ---- DOM ----
+  const $ = id => document.getElementById(id);
+  let viewedDay = null;   // day shown in "Today" list (defaults to today)
+  let weekMon = null;     // Monday shown in Weeks tab
+
+  function usageCounts() {
+    const c = {};
+    state.log.forEach(e => { c[e.drinkId] = (c[e.drinkId] || 0) + 1; });
+    return c;
+  }
+
+  function renderSelect() {
+    const sel = $('drinkSelect'), prev = sel.value || state.lastDrinkId;
+    const counts = usageCounts();
+    const sorted = [...state.drinks].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    sel.innerHTML = sorted.map(d => `<option value="${d.id}">${esc(drinkLabel(d))}</option>`).join('');
+    if (prev && state.drinks.some(d => d.id === prev)) sel.value = prev;
+
+    const top = sorted.filter(d => counts[d.id]).slice(0, 4);
+    $('quickChips').innerHTML = top.map(d =>
+      `<button class="chip" data-quick="${d.id}">+ ${esc(d.name)} ${esc(serveOf(d).toLowerCase())}</button>`).join('');
+  }
+
+  function renderToday() {
+    const today = drinkingDay();
+    const day = viewedDay || today;
+    if (!$('logDay').value) $('logDay').value = today;
+    $('logDay').max = today;
+
+    const isToday = day === today;
+    $('todayTitle').textContent = isToday ? 'Today' : niceDay(day);
+    $('dayListTitle').textContent = isToday ? 'Drinks today' : 'Drinks on ' + niceDay(day);
+
+    const t = dayTotals(day);
+    $('tUnits').textContent = fmtU(t.units);
+    $('tKcal').textContent = fmtK(t.kcal);
+    $('tCount').textContent = t.items.length;
+
+    const w = weekTotals(mondayOf(today), today);
+    $('wUnits').textContent = fmtU(w.units);
+    $('wKcal').textContent = fmtK(w.kcal);
+    $('wAF').textContent = w.af;
+    const pct = Math.min(100, w.units / WEEKLY_LIMIT * 100);
+    const bar = $('wBar');
+    bar.style.width = pct + '%';
+    bar.style.background = w.units > WEEKLY_LIMIT ? 'var(--bad)' : w.units > WEEKLY_LIMIT * 0.75 ? 'var(--warn)' : 'var(--good)';
+    const left = WEEKLY_LIMIT - w.units;
+    $('wNote').textContent = (left >= 0 ? `${fmtU(left)} units left of the 14 guideline` : `${fmtU(-left)} units over the 14 guideline`)
+      + ` · ${w.af} of ${w.counted} finished day${w.counted === 1 ? '' : 's'} alcohol-free`;
+
+    const items = [...t.items].sort((a, b) => b.ts - a.ts);
+    $('todayList').innerHTML = items.map(e => `
+      <li>
+        <div class="t"><div>${esc(e.label)}</div>
+          <div class="muted">${new Date(e.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · ${fmtU(e.units)} units · ${fmtK(e.kcal)} kcal</div></div>
+        <button class="small danger" data-del="${e.id}" aria-label="Delete">✕</button>
+      </li>`).join('');
+    $('todayEmpty').classList.toggle('hidden', items.length > 0);
+  }
+
+  function renderWeek() {
+    const today = drinkingDay();
+    if (!weekMon) weekMon = mondayOf(today);
+    const end = addDays(weekMon, 6);
+    $('weekLabel').textContent = `${niceDay(weekMon).replace(/^\w+ /, '')} – ${niceDay(end).replace(/^\w+ /, '')}`;
+    $('nextWeek').disabled = weekMon >= mondayOf(today);
+    $('nextWeek').style.opacity = $('nextWeek').disabled ? .4 : 1;
+
+    const w = weekTotals(weekMon, today);
+    $('vwUnits').textContent = fmtU(w.units);
+    $('vwKcal').textContent = fmtK(w.kcal);
+    $('vwAF').textContent = w.af;
+
+    const days = [...Array(7)].map((_, i) => addDays(weekMon, i));
+    const vals = days.map(k => dayTotals(k).units);
+    const max = Math.max(8, ...vals);
+    $('dayBars').innerHTML = days.map((k, i) => {
+      const u = vals[i], af = isAF(k, today);
+      const cls = u >= 0.05 ? '' : af ? 'af' : 'none';
+      const h = Math.max(2, u / max * 100);
+      return `<div class="day" data-day="${k}">
+        <span class="v">${u >= 0.05 ? fmtU(u) : af ? 'AF' : ''}</span>
+        <div class="col ${cls}" style="height:${h}%"></div>
+        <small>${'MTWTFSS'[i]}</small></div>`;
+    }).join('');
+
+    // recent weeks table (last 8 weeks that overlap tracking)
+    const rows = [];
+    let mon = mondayOf(today);
+    for (let i = 0; i < 8; i++) {
+      if (addDays(mon, 6) < state.startDay && !state.log.some(e => e.day >= mon && e.day <= addDays(mon, 6))) break;
+      const t = weekTotals(mon, today);
+      rows.push(`<tr data-week="${mon}"><td>${niceDay(mon).replace(/^\w+ /, '')}</td><td style="color:${t.units > WEEKLY_LIMIT ? 'var(--bad)' : 'inherit'}">${fmtU(t.units)}</td><td>${fmtK(t.kcal)}</td><td>${t.af}/${t.counted}</td></tr>`);
+      mon = addDays(mon, -7);
+    }
+    $('weeksTable').innerHTML = rows.join('');
+
+    // all-time
+    let afTotal = 0, streak = 0, streakOpen = true;
+    for (let k = addDays(today, -1); k >= state.startDay; k = addDays(k, -1)) {
+      const a = isAF(k, today);
+      if (a) { afTotal++; if (streakOpen) streak++; } else streakOpen = false;
+    }
+    $('aAF').textContent = afTotal;
+    $('aStreak').textContent = streak;
+    const totalUnits = state.log.reduce((s, e) => s + e.units, 0);
+    const daysTracked = Math.max(1, (parseKey(today) - parseKey(state.startDay)) / 864e5 + 1);
+    $('aAvg').textContent = fmtU(totalUnits / Math.max(1, daysTracked / 7));
+  }
+
+  function renderDrinks() {
+    const counts = usageCounts();
+    $('drinksList').innerHTML = [...state.drinks]
+      .sort((a, b) => a.name.localeCompare(b.name) || a.ml - b.ml)
+      .map(d => `
+      <li>
+        <div class="t"><div>${esc(d.name)} – ${esc(serveOf(d))}</div>
+          <div class="muted">${d.abv}% · ${fmtU(unitsOf(d.ml, d.abv))} units · ~${fmtK(kcalOf(d.ml, d.kcal100))} kcal${counts[d.id] ? ' · logged ' + counts[d.id] + '×' : ''}</div></div>
+        <button class="small" data-edit="${d.id}">Edit</button>
+        <button class="small danger" data-remove="${d.id}" aria-label="Delete">✕</button>
+      </li>`).join('');
+  }
+
+  function renderAll() { renderSelect(); renderToday(); renderWeek(); renderDrinks(); }
+
+  // ---- actions ----
+  let toastTimer, undoFn;
+  function toast(msg, undo) {
+    $('toastMsg').textContent = msg;
+    undoFn = undo;
+    $('toastUndo').classList.toggle('hidden', !undo);
+    $('toast').classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').classList.add('hidden'), 4000);
+  }
+  $('toastUndo').onclick = () => { if (undoFn) undoFn(); $('toast').classList.add('hidden'); };
+
+  function logDrink(id, qty = 1, day) {
+    const d = state.drinks.find(x => x.id === id);
+    if (!d) return;
+    const today = drinkingDay();
+    day = day && day <= today ? day : today;
+    const added = [];
+    for (let i = 0; i < qty; i++) {
+      const e = { id: uid(), drinkId: d.id, label: drinkLabel(d), ml: d.ml, abv: d.abv,
+        units: unitsOf(d.ml, d.abv), kcal: kcalOf(d.ml, d.kcal100), day, ts: Date.now() + i };
+      state.log.push(e); added.push(e.id);
+    }
+    if (day < state.startDay) state.startDay = day;
+    state.lastDrinkId = id;
+    save();
+    viewedDay = day === today ? null : day;
+    renderAll();
+    const u = unitsOf(d.ml, d.abv) * qty;
+    toast(`Added ${qty > 1 ? qty + ' × ' : ''}${d.name} (${fmtU(u)} units)`, () => {
+      state.log = state.log.filter(e => !added.includes(e.id)); save(); renderAll();
+    });
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  $('addBtn').onclick = () => {
+    const qty = Math.max(1, Math.min(20, parseInt($('logQty').value, 10) || 1));
+    logDrink($('drinkSelect').value, qty, $('logDay').value);
+    $('logQty').value = 1;
+  };
+  $('quickChips').onclick = e => { const b = e.target.closest('[data-quick]'); if (b) logDrink(b.dataset.quick, 1, $('logDay').value); };
+  $('logDay').onchange = () => { const today = drinkingDay(); const v = $('logDay').value; viewedDay = v && v !== today ? v : null; renderToday(); };
+
+  $('todayList').onclick = e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    const idx = state.log.findIndex(x => x.id === b.dataset.del);
+    if (idx < 0) return;
+    const [removed] = state.log.splice(idx, 1);
+    save(); renderAll();
+    toast('Drink removed', () => { state.log.push(removed); save(); renderAll(); });
+  };
+
+  // weeks tab
+  $('prevWeek').onclick = () => { weekMon = addDays(weekMon, -7); renderWeek(); };
+  $('nextWeek').onclick = () => { weekMon = addDays(weekMon, 7); renderWeek(); };
+  $('weeksTable').onclick = e => { const r = e.target.closest('[data-week]'); if (r) { weekMon = r.dataset.week; renderWeek(); window.scrollTo(0, 0); } };
+  $('dayBars').onclick = e => {
+    const d = e.target.closest('[data-day]'); if (!d) return;
+    const today = drinkingDay();
+    if (d.dataset.day > today) return;
+    viewedDay = d.dataset.day === today ? null : d.dataset.day;
+    $('logDay').value = d.dataset.day;
+    showTab('today'); renderToday();
+  };
+
+  // drinks form
+  let editingId = null;
+  function preview() {
+    const ml = parseFloat($('fMl').value), abv = parseFloat($('fAbv').value);
+    const k = $('fKcal').value !== '' ? parseFloat($('fKcal').value) : (isFinite(abv) ? estKcal(abv) : NaN);
+    $('fPreview').textContent = isFinite(ml) && isFinite(abv)
+      ? `= ${fmtU(unitsOf(ml, abv))} units · ~${fmtK(kcalOf(ml, k))} kcal` : ' ';
+  }
+  $('fServe').onchange = () => {
+    if ($('fServe').value !== 'custom') $('fMl').value = parseInt($('fServe').value, 10);
+    else $('fMl').focus();
+    preview();
+  };
+  $('fMl').oninput = () => {
+    const v = $('fMl').value;
+    if ($('fServe').value === '568can' && v === '568') return preview();
+    $('fServe').value = [...$('fServe').options].some(o => o.value === v) ? v : 'custom';
+    preview();
+  };
+  $('fAbv').oninput = preview;
+  $('fKcal').oninput = preview;
+
+  function resetForm() {
+    editingId = null;
+    $('formTitle').textContent = 'Add a drink';
+    $('fName').value = ''; $('fAbv').value = ''; $('fKcal').value = '';
+    $('fServe').value = '568'; $('fMl').value = 568;
+    $('cancelEdit').classList.add('hidden');
+    preview();
+  }
+  $('cancelEdit').onclick = resetForm;
+
+  $('saveDrink').onclick = () => {
+    const name = $('fName').value.trim();
+    const ml = parseFloat($('fMl').value), abv = parseFloat($('fAbv').value);
+    if (!name) return alert('Enter a name.');
+    if (!(ml > 0 && ml <= 2000)) return alert('Enter a volume in ml.');
+    if (!(abv >= 0 && abv <= 70)) return alert('Enter the strength (ABV %).');
+    const kcal100 = $('fKcal').value !== '' ? parseFloat($('fKcal').value) : estKcal(abv);
+    const serve = $('fServe').value === '568can' && ml === 568 ? LARGE_CAN : undefined;
+    if (editingId) {
+      const d = state.drinks.find(d => d.id === editingId);
+      Object.assign(d, { name, ml, abv, kcal100 });
+      if (serve) d.serve = serve; else delete d.serve;
+      toast('Drink updated (past entries unchanged)');
+    } else {
+      state.drinks.push({ id: uid(), name, ml, abv, kcal100, ...(serve ? { serve } : {}) });
+      toast('Drink added');
+    }
+    save(); resetForm(); renderAll();
+  };
+
+  $('drinksList').onclick = e => {
+    const ed = e.target.closest('[data-edit]'), rm = e.target.closest('[data-remove]');
+    if (ed) {
+      const d = state.drinks.find(x => x.id === ed.dataset.edit);
+      editingId = d.id;
+      $('formTitle').textContent = 'Edit drink';
+      $('fName').value = d.name; $('fMl').value = d.ml; $('fAbv').value = d.abv; $('fKcal').value = d.kcal100;
+      $('fServe').value = d.serve === LARGE_CAN ? '568can'
+        : [...$('fServe').options].some(o => o.value === String(d.ml)) ? String(d.ml) : 'custom';
+      $('cancelEdit').classList.remove('hidden');
+      preview(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (rm) {
+      const idx = state.drinks.findIndex(x => x.id === rm.dataset.remove);
+      const [removed] = state.drinks.splice(idx, 1);
+      save(); renderAll();
+      toast(`Removed ${removed.name}`, () => { state.drinks.splice(idx, 0, removed); save(); renderAll(); });
+    }
+  };
+
+  // backup
+  $('exportBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `units-backup-${drinkingDay()}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').onchange = async () => {
+    const f = $('importFile').files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data.drinks) || !Array.isArray(data.log)) throw new Error('Not a backup file');
+      if (!confirm(`Replace current data with backup (${data.log.length} logged drinks)?`)) return;
+      state = data; if (!state.startDay) state.startDay = drinkingDay();
+      save(); renderAll(); toast('Backup restored');
+    } catch (err) { alert('Import failed: ' + err.message); }
+    $('importFile').value = '';
+  };
+
+  // tabs
+  function showTab(name) {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+    ['today', 'week', 'drinks'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== name));
+    if (name === 'week') renderWeek();
+    window.scrollTo(0, 0);
+  }
+  document.querySelector('nav.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); };
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  // refresh when app comes back to the foreground (e.g. the next day)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { $('logDay').value = ''; viewedDay = null; weekMon = null; renderAll(); }
+  });
+
+  load(); resetForm(); renderAll();
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
