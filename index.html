@@ -53,6 +53,8 @@
   .brand b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
   .brand b span { color: var(--accent); }
   .brand small { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .installbtn { font-size: 12px; font-weight: 800; padding: 7px 12px; border-radius: 999px; color: var(--accent-ink);
+    background: linear-gradient(135deg, var(--accent2), var(--accent)); box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent); }
   .datepill { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--card); border: 1px solid var(--line2); border-radius: 999px; padding: 6px 10px; }
 
   h2 { display: flex; align-items: center; gap: 8px; font-size: 11.5px; margin: 0 0 10px; color: var(--muted);
@@ -198,6 +200,7 @@
     </g>
   </svg>
   <div class="brand"><b>Good Measure<span>.</span></b><small>Drink tracker</small></div>
+  <button class="installbtn hidden" id="installBtn">Install app</button>
   <span class="datepill" id="hdrDate"></span>
 </header>
 
@@ -891,6 +894,26 @@
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+
+  // "Install app" button: shown only when opened in the browser and Chrome says it can be installed
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installEvt = e;
+    $('installBtn').classList.remove('hidden');
+    $('hdrDate').classList.add('hidden');
+  });
+  $('installBtn').onclick = async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    await installEvt.userChoice.catch(() => {});
+    installEvt = null;
+  };
+  window.addEventListener('appinstalled', () => {
+    $('installBtn').classList.add('hidden');
+    $('hdrDate').classList.remove('hidden');
+    toast('Installed – open Good Measure from your home screen');
+  });
 })();
 </script>
 </body>
