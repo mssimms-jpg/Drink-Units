@@ -109,7 +109,12 @@
   .status.near { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
   .status.over { color: #fff; background: var(--bad); }
   .kpis { display: grid; gap: 8px; }
-  .kpi { background: var(--card2); border-radius: 12px; padding: 8px 10px; }
+  .kpi { background: var(--card2); border-radius: 12px; padding: 8px 10px; text-align: center; }
+  /* tab change slide */
+  @keyframes inFromRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  @keyframes inFromLeft { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+  section.in-right { animation: inFromRight .22s ease-out; }
+  section.in-left { animation: inFromLeft .22s ease-out; }
   .kpi small { display: block; white-space: nowrap; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .kpi b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
   .kpi b em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
@@ -842,13 +847,37 @@
   };
 
   // tabs
+  const TABS = ['today', 'week', 'drinks'];
+  let currentTab = 'today';
   function showTab(name) {
+    if (!TABS.includes(name)) return;
+    const dir = TABS.indexOf(name) - TABS.indexOf(currentTab);
+    currentTab = name;
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-    ['today', 'week', 'drinks'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== name));
+    TABS.forEach(t => $('tab-' + t).classList.toggle('hidden', t !== name));
+    const sec = $('tab-' + name);
+    sec.classList.remove('in-left', 'in-right');
+    if (dir) { void sec.offsetWidth; sec.classList.add(dir > 0 ? 'in-right' : 'in-left'); }
     if (name === 'week') renderWeek();
     window.scrollTo(0, 0);
   }
   document.querySelector('nav.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); };
+
+  // swipe left/right anywhere on the page to change tab
+  let sx = null, sy = 0, st = 0;
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    // ignore multi-touch, form controls, and the screen edges (Android uses those for "back")
+    if (e.touches.length > 1 || e.target.closest('input, select, textarea, .toast') || t.clientX < 24 || t.clientX > innerWidth - 24) { sx = null; return; }
+    sx = t.clientX; sy = t.clientY; st = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    sx = null;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - st > 800) return;
+    showTab(TABS[TABS.indexOf(currentTab) + (dx < 0 ? 1 : -1)]);
+  }, { passive: true });
 
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
