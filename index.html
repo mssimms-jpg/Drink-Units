@@ -7,7 +7,7 @@
 <title>Good Measure</title>
 <meta name="application-name" content="Good Measure">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
+<link rel="icon" href="icon-gm-192.png">
 <style>
   /* ---- backgrounds: light grey (default), sage green, dark ---- */
   :root, [data-bg="grey"] {
@@ -875,7 +875,7 @@
     if (sx === null) return;
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     sx = null;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - st > 800) return;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2 || Date.now() - st > 1000) return;
     showTab(TABS[TABS.indexOf(currentTab) + (dx < 0 ? 1 : -1)]);
   }, { passive: true });
 
