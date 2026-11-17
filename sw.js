@@ -1,6 +1,6 @@
 // Offline support: serve the app from cache, refresh the cache in the background.
-const CACHE = 'units-v10';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-gm-192.png', 'icon-gm-512.png'];
+const CACHE = 'units-v11';
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-gm-192.png?v=2', 'icon-gm-512.png?v=2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
