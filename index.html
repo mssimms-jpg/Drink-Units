@@ -3,81 +3,199 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1b1f24">
-<title>Units</title>
+<meta name="theme-color" content="#0c0e11">
+<title>Good Measure</title>
+<meta name="application-name" content="Good Measure">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <style>
-  :root {
-    --bg: #14171b; --card: #1f242a; --card2: #272d34; --line: #333a42;
-    --text: #eef1f4; --muted: #9aa4ae; --accent: #f2a93b; --accent-ink: #1b1305;
-    --good: #5cc98a; --warn: #f2a93b; --bad: #ef6b6b;
+  /* ---- backgrounds: light grey (default), sage green, dark ---- */
+  :root, [data-bg="grey"] {
+    --bg: #eceef1; --card: #ffffff; --card2: #f2f4f6; --line: rgba(0,0,0,.06); --line2: #dde1e6;
+    --text: #1c2128; --muted: #66707b; --dim: #9aa2ab; --track: #e4e7eb; --navbg: rgba(255,255,255,.9);
+    --shadow: 0 1px 2px rgba(20,30,40,.05), 0 6px 20px rgba(20,30,40,.05); --glowA: .30;
   }
-  * { box-sizing: border-box; }
+  [data-bg="green"] {
+    --bg: #dce9df; --card: #fbfdfb; --card2: #eef4ef; --line: rgba(20,60,30,.07); --line2: #d2dfd5;
+    --text: #1c2a21; --muted: #5d6f63; --dim: #91a297; --track: #d6e3d9; --navbg: rgba(251,253,251,.9);
+    --shadow: 0 1px 2px rgba(20,50,30,.05), 0 6px 20px rgba(20,50,30,.06); --glowA: .30;
+  }
+  [data-bg="dark"] {
+    --bg: #0c0e11; --card: #16191e; --card2: #1f242b; --line: rgba(255,255,255,.07); --line2: #2c323a;
+    --text: #f3f4f6; --muted: #8d97a2; --dim: #5f6873; --track: #272c34; --navbg: rgba(12,14,17,.86);
+    --shadow: none; --glowA: .22;
+  }
+  /* ---- drink themes ---- */
+  :root, [data-drink="beer"] {
+    --accent: #eeaa1f; --accent2: #f6c84c; --accent-ink: #2b1b00; --accent-deep: #b86a00; --accent-soft: #fff3d6;
+  }
+  [data-drink="wine"] {
+    --accent: #a3233f; --accent2: #cf4a68; --accent-ink: #ffffff; --accent-deep: #6a0f26; --accent-soft: #fbe6eb;
+  }
+  [data-bg="dark"][data-drink="wine"] { --accent-deep: #ff8fa6; --accent-soft: rgba(207,74,104,.15); }
+  [data-bg="dark"][data-drink="beer"] { --accent-deep: #ffcf66; --accent-soft: rgba(238,170,31,.12); }
+  :root { --good: #1fa971; --warn: #e08600; --bad: #e0384c; --radius: 18px; }
+  [data-bg="dark"] { --good: #3ed598; --warn: #f5a623; --bad: #ff5d5d; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  body { padding: env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom)); }
-  main { max-width: 520px; margin: 0 auto; padding: 12px 16px; }
-  h1 { font-size: 20px; margin: 4px 0 12px; }
-  h2 { font-size: 15px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: background .3s; }
+  body { padding: env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom)); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 320px; z-index: -1; pointer-events: none; opacity: var(--glowA);
+    background: radial-gradient(90% 100% at 50% -20%, var(--accent2), transparent 70%); }
+  main { max-width: 520px; margin: 0 auto; padding: 0 16px 12px; }
+
+  /* ---- app bar ---- */
+  .appbar { display: flex; align-items: center; gap: 10px; max-width: 520px; margin: 0 auto; padding: 14px 16px 12px; }
+  .appbar .logo { width: 36px; height: 36px; flex: none; filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--accent) 40%, transparent)); }
+  [data-drink="beer"] .logo .wine, [data-drink="wine"] .logo .beer { display: none; }
+  .brand { flex: 1; line-height: 1; }
+  .brand b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .brand b span { color: var(--accent); }
+  .brand small { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .datepill { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--card); border: 1px solid var(--line2); border-radius: 999px; padding: 6px 10px; }
+
+  h2 { display: flex; align-items: center; gap: 8px; font-size: 11.5px; margin: 0 0 10px; color: var(--muted);
+    font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
+  h2::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  [data-bg="dark"] .card { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0) 60%), var(--card); }
   .row { display: flex; gap: 8px; align-items: center; }
   .row > * { min-width: 0; }
   .grow { flex: 1; }
   select, input { width: 100%; font: inherit; color: var(--text); background: var(--card2);
-    border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  button { font: inherit; border: 0; border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    border: 1px solid var(--line2); border-radius: 12px; padding: 12px; outline: none; }
+  select:focus, input:focus { border-color: var(--accent); }
+  select { appearance: none; -webkit-appearance: none; padding-right: 38px; font-weight: 600;
+    background: var(--card2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238d97a2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center; }
+  [data-bg="dark"] input[type=date]::-webkit-calendar-picker-indicator { filter: invert(.7); }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer;
     background: var(--card2); color: var(--text); }
-  button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-  button.big { width: 100%; padding: 16px; font-size: 18px; margin-top: 10px; }
+  button:active { transform: scale(.97); }
+  button.primary { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: var(--accent-ink); font-weight: 800;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
   button.danger { color: var(--bad); }
   button.small { padding: 8px 12px; font-size: 14px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .chip { background: var(--card2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-deep);
+    border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+
+  /* ---- log card ---- */
+  .logrow { display: grid; grid-template-columns: 1fr 64px 96px; gap: 8px; margin-top: 8px; }
+  .logrow input { padding: 12px 10px; }
+  .logrow #logQty { text-align: center; }
+  .logrow button { padding: 0; font-size: 17px; }
+
+  /* ---- dashboard ---- */
+  .dash { display: grid; grid-template-columns: 132px 1fr; gap: 14px; align-items: center; }
+  .gauge { position: relative; width: 132px; height: 132px; }
+  .gauge svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .gauge .track { stroke: var(--track); }
+  .gauge .arc, .gauge .head, .gauge .headline { transition: stroke-dasharray .6s cubic-bezier(.2,.8,.2,1), stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1); }
+  .gauge .head { stroke: #fffaf0; }
+  .gauge .headline { stroke: rgba(120,80,0,.18); }
+  [data-drink="wine"] .gauge .head, [data-drink="wine"] .gauge .headline, [data-drink="wine"] .gauge .bubbles { display: none; }
+  .gauge .tick { stroke-width: 3; stroke-linecap: round; }
+  .gauge .tick.guide { stroke: var(--muted); }
+  .gauge .tick.tgt { stroke: var(--accent-deep); }
+  .gauge .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 4px; }
+  .gauge .center small { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .gauge .center b { font-size: 32px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .gauge .center span { font-size: 11px; color: var(--muted); }
+  .status { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+  .status.ok { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .status.near { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .status.over { color: #fff; background: var(--bad); }
+  .kpis { display: grid; gap: 8px; }
+  .kpi { background: var(--card2); border-radius: 12px; padding: 8px 10px; }
+  .kpi small { display: block; white-space: nowrap; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .kpi b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .kpi b em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+  .kpi .sub { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .kpi-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi.af b { color: var(--good); }
+  .dash-foot { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .legend { font-size: 11.5px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .note { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+  /* ---- settings ---- */
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--card2); border-radius: 12px; padding: 4px; }
+  .seg button { background: none; padding: 10px 6px; font-size: 14px; font-weight: 600; color: var(--muted); border-radius: 9px; }
+  .seg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  [data-bg="dark"] .seg button.on { background: #2c323a; }
+  .seg .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.15); }
+
+  /* ---- shared ---- */
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stat { background: var(--card2); border-radius: 10px; padding: 10px; text-align: center; }
-  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
-  .stat span { font-size: 12px; color: var(--muted); }
-  .bar { height: 10px; background: var(--card2); border-radius: 99px; overflow: hidden; margin: 12px 0 4px; }
-  .bar { position: relative; height: 14px; overflow: visible; }
-  .bar .mark { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: #fff; border-radius: 1px; }
-  .bar .mark.tgt { background: var(--accent); }
-  .legend { font-size: 12px; margin-bottom: 4px; }
-  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 0; vertical-align: 0; }
-  .bar > div { height: 100%; background: var(--good); border-radius: 99px; transition: width .3s; }
+  .stat { background: var(--card2); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .stat span { font-size: 11px; color: var(--muted); }
   .muted { color: var(--muted); font-size: 13px; }
   ul.list { list-style: none; margin: 0; padding: 0; }
   ul.list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
   ul.list li:first-child { border-top: 0; }
   ul.list .t { flex: 1; min-width: 0; }
-  ul.list .t div:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  ul.list .t div:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .num { font-variant-numeric: tabular-nums; }
   .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 140px; margin-top: 8px; }
   .day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
-  .day .col { width: 100%; border-radius: 6px 6px 2px 2px; background: var(--accent); min-height: 2px; }
+  .day .col { width: 100%; border-radius: 7px 7px 3px 3px; background: linear-gradient(180deg, var(--accent2), var(--accent)); min-height: 2px; }
+  [data-drink="beer"] .day .col:not(.af):not(.none) { border-top: 6px solid #fffaf0; box-shadow: inset 0 1px 0 rgba(120,80,0,.15), 0 0 0 1px rgba(120,80,0,.08); }
   .day .col.af { background: var(--good); height: 6px !important; }
-  .day .col.none { background: var(--line); height: 2px !important; }
+  .day .col.none { background: var(--line2); height: 2px !important; }
   .day small { font-size: 11px; color: var(--muted); }
   .day .v { font-size: 11px; font-variant-numeric: tabular-nums; }
-  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #101316;
+
+  /* ---- bottom nav ---- */
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; z-index: 5;
+    background: var(--navbg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
-  nav.tabs button { flex: 1; background: none; border-radius: 0; padding: 14px 0 16px; color: var(--muted); font-weight: 600; }
-  nav.tabs button.on { color: var(--accent); }
+  nav.tabs button { flex: 1; background: none; border-radius: 0; padding: 9px 0 10px; color: var(--dim); font-weight: 700;
+    font-size: 11px; letter-spacing: .04em; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  nav.tabs button svg { width: 24px; height: 24px; }
+  nav.tabs button.on { color: var(--accent-deep); }
+  [data-bg="dark"] nav.tabs button.on { color: var(--accent2); }
+
   .hidden { display: none !important; }
-  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--card2);
-    border: 1px solid var(--line); padding: 10px 16px; border-radius: 10px; display: flex; gap: 12px; align-items: center;
-    box-shadow: 0 6px 24px rgba(0,0,0,.4); z-index: 10; width: max-content; max-width: calc(100% - 32px); }
-  .toast button { padding: 6px 10px; color: var(--accent); background: none; font-weight: 700; }
+  .toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); background: #23282f; color: #f3f4f6;
+    padding: 10px 16px; border-radius: 12px; display: flex; gap: 12px; align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3); z-index: 10; width: max-content; max-width: calc(100% - 32px); font-size: 14px; }
+  .toast button { padding: 6px 10px; color: #f6c84c; background: none; font-weight: 800; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: right; padding: 8px 4px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-  th { color: var(--muted); font-weight: 600; border-top: 0; }
+  th { color: var(--muted); font-weight: 600; border-top: 0; font-size: 12px; }
   th:first-child, td:first-child { text-align: left; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 350px) { .dash { grid-template-columns: 116px 1fr; } .gauge { width: 116px; height: 116px; } .gauge .center b { font-size: 27px; } }
 </style>
 </head>
 <body>
+<header class="appbar">
+  <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
+    <defs>
+      <linearGradient id="lgBeer" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8cf55"/><stop offset="1" stop-color="#e99a12"/></linearGradient>
+      <linearGradient id="lgWine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cf4a68"/><stop offset="1" stop-color="#7d1530"/></linearGradient>
+    </defs>
+    <g class="beer">
+      <rect width="36" height="36" rx="10" fill="url(#lgBeer)"/>
+      <path d="M10.5 9.5h15l-1.6 17.2a2 2 0 0 1-2 1.8h-7.8a2 2 0 0 1-2-1.8z" fill="#fff"/>
+      <path d="M12.2 14.5h11.6l-1.15 11.7a1 1 0 0 1-1 .9h-7.3a1 1 0 0 1-1-.9z" fill="#f4b52c"/>
+      <circle cx="16" cy="20" r="1" fill="#fff" opacity=".7"/><circle cx="19.5" cy="23" r=".8" fill="#fff" opacity=".6"/><circle cx="18" cy="17.6" r=".7" fill="#fff" opacity=".6"/>
+    </g>
+    <g class="wine">
+      <rect width="36" height="36" rx="10" fill="url(#lgWine)"/>
+      <path d="M11.5 8.5h13c.4 3.2.2 6.6-1.4 8.7a6.3 6.3 0 0 1-4.1 2.4V25.6h3.3a1 1 0 0 1 0 2h-8.6a1 1 0 0 1 0-2H17v-6a6.3 6.3 0 0 1-4.1-2.4c-1.6-2.1-1.8-5.5-1.4-8.7z" fill="#fff"/>
+      <path d="M12.6 12.2h10.8c-.1 1.6-.5 3.1-1.3 4.1a5.1 5.1 0 0 1-8.2 0c-.8-1-1.2-2.5-1.3-4.1z" fill="#b8284a"/>
+    </g>
+  </svg>
+  <div class="brand"><b>Good Measure<span>.</span></b><small>Drink tracker</small></div>
+  <span class="datepill" id="hdrDate"></span>
+</header>
+
 <main>
 
 <!-- TODAY -->
@@ -85,39 +203,48 @@
   <div class="card">
     <h2>Log a drink</h2>
     <select id="drinkSelect" aria-label="Drink"></select>
-    <div class="row" style="margin-top:8px">
-      <div class="grow">
-        <label for="logDay" style="margin-top:0">Day</label>
-        <input type="date" id="logDay">
-      </div>
-      <div style="width:96px">
-        <label for="logQty" style="margin-top:0">How many</label>
-        <input type="number" id="logQty" min="1" max="20" value="1" inputmode="numeric">
-      </div>
+    <div class="logrow">
+      <input type="date" id="logDay" aria-label="Day">
+      <input type="number" id="logQty" min="1" max="20" value="1" inputmode="numeric" aria-label="How many">
+      <button class="primary" id="addBtn">+ Add</button>
     </div>
-    <button class="primary big" id="addBtn">+ Add</button>
     <div class="chips" id="quickChips"></div>
   </div>
 
   <div class="card">
-    <h2 id="todayTitle">Today</h2>
-    <div class="stats">
-      <div class="stat"><b id="tUnits">0</b><span>units</span></div>
-      <div class="stat"><b id="tKcal">0</b><span>kcal</span></div>
-      <div class="stat"><b id="tCount">0</b><span>drinks</span></div>
+    <div class="dash">
+      <div class="gauge">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="gBeer" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#eba51a"/><stop offset="1" stop-color="#f9d461"/></linearGradient>
+            <linearGradient id="gWine" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#8e1a38"/><stop offset="1" stop-color="#d4506e"/></linearGradient>
+          </defs>
+          <circle class="track" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-linecap="round" transform="rotate(135 60 60)"/>
+          <circle class="arc" id="wBar" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-linecap="round" transform="rotate(135 60 60)"/>
+          <circle class="headline" id="wHeadLine" cx="60" cy="60" r="50" fill="none" stroke-width="12" stroke-linecap="round" transform="rotate(135 60 60)"/>
+          <circle class="head" id="wHead" cx="60" cy="60" r="50" fill="none" stroke-width="10.5" stroke-linecap="round" transform="rotate(135 60 60)"/>
+          <g id="mGuide"><line class="tick guide" x1="60" y1="3" x2="60" y2="17"/></g>
+          <g id="mTarget"><line class="tick tgt" x1="60" y1="3" x2="60" y2="17"/></g>
+        </svg>
+        <div class="center"><small>This week</small><b id="wUnits">0</b><span id="wUnitsLbl">of 14 units</span></div>
+        <div class="status ok" id="wStatus">On track</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <small id="todayTitle">Today</small>
+          <b><span id="tUnits">0</span><em>units</em></b>
+          <span class="sub"><span id="tKcal">0</span> kcal · <span id="tCount">0 drinks</span></span>
+        </div>
+        <div class="kpi-pair">
+          <div class="kpi"><small>Week kcal</small><b id="wKcal">0</b></div>
+          <div class="kpi af"><small>AF days</small><b id="wAF">0</b></div>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>This week (Mon–Sun)</h2>
-    <div class="stats">
-      <div class="stat"><b id="wUnits">0</b><span id="wUnitsLbl">units of 14</span></div>
-      <div class="stat"><b id="wKcal">0</b><span>kcal</span></div>
-      <div class="stat"><b id="wAF">0</b><span>alcohol-free days</span></div>
+    <div class="dash-foot">
+      <div class="legend" id="wLegend"></div>
+      <div class="note" id="wNote"></div>
     </div>
-    <div class="bar"><div id="wBar"></div><i class="mark" id="mGuide" title="14-unit guideline"></i><i class="mark tgt" id="mTarget" title="Your target"></i></div>
-    <div class="muted legend" id="wLegend"></div>
-    <div class="muted" id="wNote"></div>
   </div>
 
   <div class="card">
@@ -179,6 +306,7 @@
           <option value="125">Wine – small glass 125ml</option>
           <option value="175">Wine – medium glass 175ml</option>
           <option value="250">Wine – large glass 250ml</option>
+          <option value="375">Wine – half bottle 375ml</option>
           <option value="750">Wine – bottle 750ml</option>
           <option value="custom">Other…</option>
         </select>
@@ -210,6 +338,21 @@
   </div>
 
   <div class="card">
+    <h2>Appearance</h2>
+    <label style="margin-top:0">Theme</label>
+    <div class="seg" id="segDrink">
+      <button data-v="beer"><span class="sw" style="background:#eeaa1f"></span>Beer</button>
+      <button data-v="wine"><span class="sw" style="background:#a3233f"></span>Wine</button>
+    </div>
+    <label>Background</label>
+    <div class="seg" id="segBg">
+      <button data-v="grey"><span class="sw" style="background:#eceef1"></span>Grey</button>
+      <button data-v="green"><span class="sw" style="background:#dbe9de"></span>Sage</button>
+      <button data-v="dark"><span class="sw" style="background:#16191e"></span>Dark</button>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Weekly target</h2>
     <div class="row">
       <div class="grow">
@@ -218,7 +361,7 @@
       </div>
       <button class="primary" id="saveTarget" style="align-self:flex-end">Save</button>
     </div>
-    <p class="muted" style="margin-bottom:0">The UK low-risk guideline (14 units) stays marked on the weekly bar either way.</p>
+    <p class="muted" style="margin-bottom:0">The UK low-risk guideline (14 units) stays marked on the weekly gauge either way.</p>
   </div>
 
   <div class="card">
@@ -235,9 +378,15 @@
 </main>
 
 <nav class="tabs">
-  <button data-tab="today" class="on">Today</button>
-  <button data-tab="week">Weeks</button>
-  <button data-tab="drinks">Drinks</button>
+  <button data-tab="today" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.4 15.2a2 2 0 0 1-2 1.8H9.4a2 2 0 0 1-2-1.8z"/><path d="M6.6 9h10.8"/></svg>
+    Today</button>
+  <button data-tab="week">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V12"/><path d="M12 20V5"/><path d="M19 20v-9"/></svg>
+    Weeks</button>
+  <button data-tab="drinks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>
+    Drinks</button>
 </nav>
 
 <div class="toast hidden" id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
@@ -254,7 +403,7 @@
 
   // Generic wines: small 125ml, medium 175ml, large 250ml glasses and a 750ml bottle
   const WINES = [['Red wine', 13], ['White wine', 12], ['Rosé (blush)', 11.5]]
-    .flatMap(([name, abv]) => [125, 175, 250, 750].map(ml => [name, ml, abv]));
+    .flatMap(([name, abv]) => [125, 175, 250, 375, 750].map(ml => [name, ml, abv]));
 
   const SEED = [
     // Pints (568ml)
@@ -287,7 +436,7 @@
 
   const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   const serveName = ml => ({568:'Pint',284:'Half',440:'Can 440ml',500:'Can 500ml',330:'330ml',
-    125:'Small glass 125ml',175:'Medium glass 175ml',250:'Large glass 250ml',750:'Bottle 750ml'}[ml] || ml + 'ml');
+    125:'Small glass 125ml',175:'Medium glass 175ml',250:'Large glass 250ml',375:'Half bottle 375ml',750:'Bottle 750ml'}[ml] || ml + 'ml');
   const serveOf = d => d.serve || serveName(d.ml);
   const LARGE_CAN = 'Large can 568ml';
   const drinkLabel = d => `${d.name} – ${serveOf(d)} (${d.abv}%)`;
@@ -325,10 +474,11 @@
       save();
     }
   }
-  const SEED_VERSION = 3;
+  const SEED_VERSION = 4;
   const SEED_ADDED = [
     { v: 2, items: [["Foster's", 568, 3.4, null, 'Large can 568ml'], ['Madrí', 440, 4.6]] },
-    { v: 3, items: WINES },
+    { v: 3, items: WINES.filter(w => w[1] !== 375) },
+    { v: 4, items: WINES.filter(w => w[1] === 375) },
   ];
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
@@ -393,24 +543,42 @@
     const t = dayTotals(day);
     $('tUnits').textContent = fmtU(t.units);
     $('tKcal').textContent = fmtK(t.kcal);
-    $('tCount').textContent = t.items.length;
+    $('tCount').textContent = t.items.length + (t.items.length === 1 ? ' drink' : ' drinks');
+    $('hdrDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
     const w = weekTotals(mondayOf(today), today);
     $('wUnits').textContent = fmtU(w.units);
     $('wKcal').textContent = fmtK(w.kcal);
     $('wAF').textContent = w.af;
     const T = target();
-    $('wUnitsLbl').textContent = `units of ${fmtN(T)}`;
+    $('wUnitsLbl').textContent = `of ${fmtN(T)} units`;
+    // 270° gauge: full sweep = the larger of target, guideline or this week's total
     const scale = Math.max(T, GUIDELINE, w.units);
-    const bar = $('wBar');
-    bar.style.width = (w.units / scale * 100) + '%';
-    bar.style.background = w.units > T ? 'var(--bad)' : w.units > T * 0.75 ? 'var(--warn)' : 'var(--good)';
-    $('mGuide').style.left = (GUIDELINE / scale * 100) + '%';
-    $('mTarget').style.left = (T / scale * 100) + '%';
+    const C = 2 * Math.PI * 50, SWEEP = C * 0.75;
+    const frac = Math.min(1, w.units / scale);
+    const arc = $('wBar');
+    arc.parentNode.querySelector('.track').setAttribute('stroke-dasharray', `${SWEEP} ${C}`);
+    const F = frac * SWEEP;
+    arc.setAttribute('stroke-dasharray', `${Math.max(0.01, F)} ${C}`);
+    arc.setAttribute('stroke', state.drink === 'wine' ? 'url(#gWine)' : 'url(#gBeer)');
+    // the frothy head sits on the leading end of the beer, like the top of a pint
+    const H = Math.min(9, F * 0.4);
+    ['wHead', 'wHeadLine'].forEach(id => {
+      $(id).setAttribute('stroke-dasharray', `${Math.max(0.01, H)} ${C}`);
+      $(id).setAttribute('stroke-dashoffset', -(F - H));
+    });
+    [arc, $('wHead'), $('wHeadLine')].forEach(el => el.style.opacity = w.units > 0 ? 1 : 0);
+    const st = $('wStatus');
+    st.className = 'status ' + (w.units > T ? 'over' : w.units > T * 0.75 ? 'near' : 'ok');
+    st.textContent = w.units > T ? 'Over target' : w.units > T * 0.75 ? 'Getting close' : 'On track';
+    // ticks sit at 0° = top; gauge starts at -135° (bottom-left) and sweeps 270° clockwise
+    const tickAt = v => `rotate(${-135 + 270 * (v / scale)} 60 60)`;
+    $('mGuide').setAttribute('transform', tickAt(GUIDELINE));
+    $('mTarget').setAttribute('transform', tickAt(T));
     $('mTarget').classList.toggle('hidden', T === GUIDELINE);
     $('wLegend').innerHTML = T === GUIDELINE
-      ? '<i style="background:#fff"></i>14 guideline / your target'
-      : `<i style="background:var(--accent)"></i>your target (${fmtN(T)}) &nbsp; <i style="background:#fff"></i>14 guideline`;
+      ? '<span><i style="background:var(--muted)"></i>14 guideline / your target</span>'
+      : `<span><i style="background:var(--accent-deep)"></i>Your target (${fmtN(T)})</span><span><i style="background:var(--muted)"></i>14 guideline</span>`;
     const left = T - w.units;
     const vsGuide = T === GUIDELINE ? ''
       : w.units > GUIDELINE ? ` · ${fmtU(w.units - GUIDELINE)} over the 14 guideline` : ` · ${fmtU(GUIDELINE - w.units)} under the 14 guideline`;
@@ -489,6 +657,20 @@
         <button class="small danger" data-remove="${d.id}" aria-label="Delete">✕</button>
       </li>`).join('');
   }
+
+  // appearance: beer/wine theme + background, stored with the rest of the data
+  const BG_COLOURS = { grey: '#eceef1', green: '#dce9df', dark: '#0c0e11' };
+  function applyTheme() {
+    const drink = state.drink === 'wine' ? 'wine' : 'beer';
+    const bg = BG_COLOURS[state.bg] ? state.bg : 'grey';
+    document.documentElement.dataset.drink = drink;
+    document.documentElement.dataset.bg = bg;
+    document.querySelector('meta[name=theme-color]').content = BG_COLOURS[bg];
+    document.querySelectorAll('#segDrink button').forEach(b => b.classList.toggle('on', b.dataset.v === drink));
+    document.querySelectorAll('#segBg button').forEach(b => b.classList.toggle('on', b.dataset.v === bg));
+  }
+  $('segDrink').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { state.drink = b.dataset.v; save(); applyTheme(); renderAll(); } };
+  $('segBg').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { state.bg = b.dataset.v; save(); applyTheme(); } };
 
   function renderAll() { $('fTarget').value = target(); renderSelect(); renderToday(); renderWeek(); renderDrinks(); }
 
@@ -675,7 +857,7 @@
     if (document.visibilityState === 'visible') { $('logDay').value = ''; viewedDay = null; weekMon = null; renderAll(); }
   });
 
-  load(); resetForm(); renderAll();
+  load(); applyTheme(); resetForm(); renderAll();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

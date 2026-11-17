@@ -1,11 +1,11 @@
 {
-  "name": "Units Tracker",
-  "short_name": "Units",
+  "name": "Good Measure",
+  "short_name": "Good Measure",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#14171b",
-  "theme_color": "#1b1f24",
+  "background_color": "#eceef1",
+  "theme_color": "#eceef1",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
