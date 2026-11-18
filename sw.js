@@ -1,5 +1,5 @@
 // Offline support: serve the app from cache, refresh the cache in the background.
-const CACHE = 'units-v12';
+const CACHE = 'units-v13';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-gm-192.png?v=2', 'icon-gm-512.png?v=2'];
 
 self.addEventListener('install', e => {

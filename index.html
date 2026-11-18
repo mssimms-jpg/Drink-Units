@@ -424,6 +424,8 @@
     ['Stella Artois', 568, 4.6],
     ['Madrí', 568, 4.6],
     ['Birra Moretti', 568, 4.6],
+    ['Estrella Damm', 568, 4.6, 40],
+    ['Modelo Especial', 568, 4.5, 42],
     ['Heineken', 568, 5.0],
     ['Peroni', 568, 5.1],
     ["Foster's", 284, 3.4],
@@ -482,11 +484,12 @@
       save();
     }
   }
-  const SEED_VERSION = 4;
+  const SEED_VERSION = 5;
   const SEED_ADDED = [
     { v: 2, items: [["Foster's", 568, 3.4, null, 'Large can 568ml'], ['Madrí', 440, 4.6]] },
     { v: 3, items: WINES.filter(w => w[1] !== 375) },
     { v: 4, items: WINES.filter(w => w[1] === 375) },
+    { v: 5, items: [['Estrella Damm', 568, 4.6, 40], ['Modelo Especial', 568, 4.5, 42]] },
   ];
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
@@ -530,7 +533,9 @@
     const sel = $('drinkSelect'), prev = sel.value || state.lastDrinkId;
     const counts = usageCounts();
     const sorted = [...state.drinks].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
-    sel.innerHTML = sorted.map(d => `<option value="${d.id}">${esc(drinkLabel(d))}</option>`).join('');
+    const abc = [...state.drinks].sort((a, b) =>
+      a.name.localeCompare(b.name, 'en-GB', { sensitivity: 'base' }) || a.ml - b.ml || serveOf(a).localeCompare(serveOf(b)));
+    sel.innerHTML = abc.map(d => `<option value="${d.id}">${esc(drinkLabel(d))}</option>`).join('');
     if (prev && state.drinks.some(d => d.id === prev)) sel.value = prev;
 
     const top = sorted.filter(d => counts[d.id]).slice(0, 4);
