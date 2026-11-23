@@ -730,26 +730,49 @@
 
   // ---- nagging: popup as today's units climb (never for back-dated drinks) ----
   const NAG_TIERS = [
-    { min: 6, colour: '#3f9d63', emoji: '🙂', ok: ['Noted', 'Yep, fair', 'Got it'],
-      titles: ['Steady on', 'Nice and easy now', 'Pacing check'], msgs: [
+    { min: 6, colour: '#3f9d63', emoji: '🙂', ok: ['Noted', 'Yep, fair', 'Got it', 'Cheers', 'Water it is'],
+      titles: ['Steady on', 'Nice and easy now', 'Pacing check', 'Easy, tiger', 'Just a quick word'], msgs: [
+      '{u} units. Lovely. Now’s a great time to discover the joys of a lime and soda.',
+      'That’s {u} units in. You’re in the “warm and chatty” zone. Enjoy it – it’s the best bit, and it doesn’t get better from here.',
+      '{u} units so far. No drama. Just remember you’ve got to function tomorrow like a grown-up.',
+      'Quick reminder from your sensible side: {u} units. Slow it down a touch and you’ll thank yourself in the morning.',
+      '{u} units. Still very much in charge. Let’s not hand the keys over to the pints just yet.',
       'That’s {u} units today. Perfectly civilised so far – maybe stick a glass of water in before the next one.',
       '{u} units. All good, but this is the bit where “just one more” starts lying to you.',
       'Ticking along at {u} units. Have you eaten anything? Crisps don’t count. Well, they barely count.',
       '{u} units and still a functioning adult. Let’s keep it that way, eh?' ] },
-    { min: 8, colour: '#d9a520', emoji: '🤔', ok: ['Fine, last one', 'Yeah, yeah', 'OK, winding down'],
-      titles: ['Probably best make this the last one', 'Time to think about it', 'Last orders, mate'], msgs: [
+    { min: 8, colour: '#d9a520', emoji: '🤔', ok: ['Fine, last one', 'Yeah, yeah', 'OK, winding down', 'Halves from here', 'Deal'],
+      titles: ['Probably best make this the last one', 'Time to think about it', 'Last orders, mate', 'Make it a half?', 'Ding ding'], msgs: [
+      '{u} units. If you really must have another, make it a half. Or – wild idea – a Coke.',
+      'That’s {u} units. The next pint won’t make tonight any better, but it’ll definitely make tomorrow worse.',
+      '{u} units. You’re at that dangerous “I’m fine, honestly” stage. You’re fine now. Keep it that way.',
+      'Right then, {u} units. Have this one, enjoy it, and call it there. Go on, prove me wrong.',
+      '{u} units. Tomorrow-you has plans. Tomorrow-you would really like to be able to do them.',
+      'Bell’s ringing, {u} units. Last orders. Drink up slowly and think about your bed.',
       '{u} units today. That’s a good session already. Probably best make this the last one.',
       'You’re at {u}. This is the sweet spot – any more and it stops being fun and starts being tomorrow’s problem.',
       '{u} units. Future you is asking, politely for now, if you could call it a night soon.',
       'That’s {u} units. You’ve had a nice time. Quit while you’re winning.' ] },
-    { min: 10, colour: '#e07a1f', emoji: '😒', ok: ['Alright, alright', 'Stop nagging', 'I hear you'],
-      titles: ['Oi. Seriously.', 'Here we go again', 'You said that was the last one'], msgs: [
+    { min: 10, colour: '#e07a1f', emoji: '😒', ok: ['Alright, alright', 'Stop nagging', 'I hear you', 'Yes, Mum', 'Ugh, fine'],
+      titles: ['Oi. Seriously.', 'Here we go again', 'You said that was the last one', 'Really? Another?', 'Bloody hell'], msgs: [
+      '{u} units. That “last one” is getting a lot of sequels. Even Hollywood knows when to stop.',
+      'Oi, {u} units. You’re not thirsty, you’re just on autopilot. Pint of water. Then decide.',
+      '{u} units. Your bladder is working overtime, your judgement is clocking off. Wrap it up.',
+      'Come on now, {u} units. You know full well the 3am wake-up and the paracetamol hunt are coming.',
+      '{u} units. Every pint from here is basically borrowing happiness from tomorrow at a shocking rate of interest.',
+      'That’s {u}. You’re starting to repeat stories. Everyone’s heard that one. Twice. Time to go.',
       '{u} units. You said the last one was the last one. Who exactly are you trying to kid?',
       'Double figures – {u} units. Bloody hell. Glass of water. Now. Then think very hard about the next one.',
       '{u} units and counting. This is the point where a dodgy kebab starts to sound like a good idea.',
       'Right, {u} units. You know what’s coming tomorrow. Dry mouth, foggy head, the lot. Pack it in.' ] },
-    { min: 14, colour: '#d6452b', emoji: '😠', ok: ['Yes, I know', 'Sorry', 'Bugger off'],
-      titles: ['For fuck’s sake', 'That’s your whole week, you muppet', 'Are you taking the piss?'], msgs: [
+    { min: 14, colour: '#d6452b', emoji: '😠', ok: ['Yes, I know', 'Sorry', 'Bugger off', 'Alright, shut up', 'Point taken'],
+      titles: ['For fuck’s sake', 'That’s your whole week, you muppet', 'Are you taking the piss?', 'Bloody hell, mate', 'Oh, come ON'], msgs: [
+      '{u} units. Monday-to-Sunday’s allowance gone in one sitting. Bloody marvellous. Now stop.',
+      '{u} units, you plonker. You’re not “just being sociable” any more. You’re just pissed.',
+      '{u}. Tomorrow’s going to be grey, slow and full of regret. Every extra pint makes it greyer. Bed.',
+      'Seriously, {u} units? Your liver didn’t sign up for this shit. Give the poor sod a break.',
+      '{u} units. Your sensible side has left the chat. This app is all that’s left. LISTEN TO IT.',
+      'That’s {u} units. Remember how rough you felt last time? No? That’s because you’d had {u} units. Stop.',
       '{u} units. That is the ENTIRE weekly guideline in one bloody day. Well done. Genuinely impressive, in the worst possible way.',
       '{u} units today. Put the glass down. Back away slowly. Nobody needs to get hurt.',
       'Oh for crying out loud, {u} units. Your liver has just filed a formal complaint and it’s written in capitals.',
