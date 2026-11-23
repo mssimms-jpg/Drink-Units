@@ -172,6 +172,24 @@
     padding: 10px 16px; border-radius: 12px; display: flex; gap: 12px; align-items: center;
     box-shadow: 0 10px 30px rgba(0,0,0,.3); z-index: 10; width: max-content; max-width: calc(100% - 32px); font-size: 14px; }
   .toast button { padding: 6px 10px; color: #f6c84c; background: none; font-weight: 800; }
+  .toast { z-index: 30; }
+  /* ---- nag popup ---- */
+  .nag { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(10,12,16,.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  .nag-card { width: 100%; max-width: 380px; background: var(--card); color: var(--text); border-radius: 22px;
+    padding: 22px 20px 18px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.4); border-top: 6px solid var(--nagc);
+    animation: nagIn .28s cubic-bezier(.2,1.4,.4,1); }
+  .nag-card.shake { animation: nagIn .28s cubic-bezier(.2,1.4,.4,1), nagShake .5s .28s; }
+  @keyframes nagIn { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes nagShake { 20%,60% { transform: translateX(-8px) rotate(-1deg); } 40%,80% { transform: translateX(8px) rotate(1deg); } }
+  .nag-emoji { font-size: 46px; line-height: 1; }
+  .nag-units { display: inline-block; margin: 10px 0 4px; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 800;
+    letter-spacing: .05em; text-transform: uppercase; color: #fff; background: var(--nagc); }
+  .nag-title { font-size: 21px; font-weight: 900; margin: 6px 0 8px; }
+  .nag-msg { font-size: 15.5px; line-height: 1.45; margin: 0; }
+  .nag-tea { font-size: 14.5px; line-height: 1.4; margin: 12px 0 0; padding: 10px 12px; border-radius: 12px;
+    background: rgba(160,110,60,.14); }
+  .nag-ok { margin-top: 16px; width: 100%; padding: 12px; border-radius: 14px; font-weight: 800; color: #fff; background: var(--nagc); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: right; padding: 8px 4px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
   th { color: var(--muted); font-weight: 600; border-top: 0; font-size: 12px; }
@@ -397,6 +415,16 @@
     Drinks</button>
 </nav>
 
+<div class="nag hidden" id="nag" role="alertdialog" aria-modal="true" aria-labelledby="nagTitle">
+  <div class="nag-card" id="nagCard">
+    <div class="nag-emoji" id="nagEmoji"></div>
+    <div class="nag-units" id="nagUnits"></div>
+    <div class="nag-title" id="nagTitle"></div>
+    <p class="nag-msg" id="nagMsg"></p>
+    <p class="nag-tea hidden" id="nagTea"></p>
+    <button class="nag-ok" id="nagOk"></button>
+  </div>
+</div>
 <div class="toast hidden" id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
 
 <script>
@@ -699,6 +727,95 @@
   }
   $('toastUndo').onclick = () => { if (undoFn) undoFn(); $('toast').classList.add('hidden'); };
 
+
+  // ---- nagging: popup as today's units climb (never for back-dated drinks) ----
+  const NAG_TIERS = [
+    { min: 6, colour: '#3f9d63', emoji: '🙂', ok: ['Noted', 'Yep, fair', 'Got it'],
+      titles: ['Steady on', 'Nice and easy now', 'Pacing check'], msgs: [
+      'That’s {u} units today. Perfectly civilised so far – maybe stick a glass of water in before the next one.',
+      '{u} units. All good, but this is the bit where “just one more” starts lying to you.',
+      'Ticking along at {u} units. Have you eaten anything? Crisps don’t count. Well, they barely count.',
+      '{u} units and still a functioning adult. Let’s keep it that way, eh?' ] },
+    { min: 8, colour: '#d9a520', emoji: '🤔', ok: ['Fine, last one', 'Yeah, yeah', 'OK, winding down'],
+      titles: ['Probably best make this the last one', 'Time to think about it', 'Last orders, mate'], msgs: [
+      '{u} units today. That’s a good session already. Probably best make this the last one.',
+      'You’re at {u}. This is the sweet spot – any more and it stops being fun and starts being tomorrow’s problem.',
+      '{u} units. Future you is asking, politely for now, if you could call it a night soon.',
+      'That’s {u} units. You’ve had a nice time. Quit while you’re winning.' ] },
+    { min: 10, colour: '#e07a1f', emoji: '😒', ok: ['Alright, alright', 'Stop nagging', 'I hear you'],
+      titles: ['Oi. Seriously.', 'Here we go again', 'You said that was the last one'], msgs: [
+      '{u} units. You said the last one was the last one. Who exactly are you trying to kid?',
+      'Double figures – {u} units. Bloody hell. Glass of water. Now. Then think very hard about the next one.',
+      '{u} units and counting. This is the point where a dodgy kebab starts to sound like a good idea.',
+      'Right, {u} units. You know what’s coming tomorrow. Dry mouth, foggy head, the lot. Pack it in.' ] },
+    { min: 14, colour: '#d6452b', emoji: '😠', ok: ['Yes, I know', 'Sorry', 'Bugger off'],
+      titles: ['For fuck’s sake', 'That’s your whole week, you muppet', 'Are you taking the piss?'], msgs: [
+      '{u} units. That is the ENTIRE weekly guideline in one bloody day. Well done. Genuinely impressive, in the worst possible way.',
+      '{u} units today. Put the glass down. Back away slowly. Nobody needs to get hurt.',
+      'Oh for crying out loud, {u} units. Your liver has just filed a formal complaint and it’s written in capitals.',
+      '{u} units. A whole week’s worth in one go. Tomorrow’s already knackered and you’re still going. What is wrong with you?' ] },
+    { min: 20, colour: '#b3261e', emoji: '🤬', ok: ['Going home now', 'Fair cop', 'I’m stopping'],
+      titles: ['Right, that’s fucking it', 'Absolute state of you', 'Enough. Fucking. Enough.'], msgs: [
+      '{u} units. You are absolutely hammered. You’re not having fun any more, you’re just topping up. Go home.',
+      '{u} units, you daft bastard. Tomorrow you’ll be on the sofa swearing you’ll never drink again. Save yourself the speech – stop NOW.',
+      'That’s {u} units. Your liver is crying, your wallet is crying, and tomorrow you’ll be crying. Go to bed.',
+      '{u} units. You are one more pint away from texting someone you really, really shouldn’t. Phone away. Bed.' ] },
+    { min: 25, colour: '#8e1a3c', emoji: '🤢', ok: ['I’m so sorry', 'Water. Bed. Now.', 'I deserve this'],
+      titles: ['Tomorrow is going to be shit', 'Hangover incoming', 'Brace for impact'], msgs: [
+      '{u} units. Picture tomorrow: head like a cement mixer, mouth like the bottom of a birdcage, and a stomach that’s handed in its notice. Stop.',
+      '{u} units. Tomorrow you won’t be living, you’ll be surviving. Every noise will hurt. Even blinking will hurt. Is this pint worth it? It fucking isn’t.',
+      'Congratulations on {u} units. Your prize: a whole day of sweating, shaking, groaning and scrolling through your phone in sheer terror. Put. It. Down.',
+      '{u} units. You’ll wake at 4am bone dry, heart going like the clappers, wondering what you said to whom. Stop now and it might only be half as grim.' ] },
+    { min: 30, colour: '#4a0f1f', emoji: '☠️', shake: true, ok: ['Bed. Right now.', 'I am an idiot', 'Yes. Sorry. Bed.'],
+      titles: ['WHAT THE ACTUAL FUCK', 'Thirty fucking units', 'Are you trying to pickle yourself?'], msgs: [
+      '{u} UNITS. That is not a night out, that is a medical event. Stop drinking. Not “after this one”. NOW.',
+      '{u} units, you absolute weapon. Tomorrow isn’t a hangover, it’s a two-day write-off. You’ll be sick, you’ll be sweating, you’ll hate yourself and you’ll deserve every second.',
+      'Bloody hell, {u} units. Your liver is drafting its resignation letter and your brain has already left the building. Water, bed, lie on your side. GO.',
+      '{u} units. Over two weeks of the guideline in ONE day. Nobody is impressed. Nobody. Put the fucking drink down and go to bed.' ] },
+  ];
+  const TEA = [
+    'It’s {t}. Stick the kettle on, have a nice cup of tea and get yourself to bed.',
+    'Look at the time – {t}. Cup of tea, pint of water, bed. In that order.',
+    '{t}? Nothing good happens after this hour. Brew up, then bed.',
+    'It’s {t}, you night owl. A cuppa and your pillow are all you need now.',
+  ];
+  const TEA_LATE = [
+    'It’s {t} in the bloody morning. Nothing’s open, nothing’s happening, nobody’s impressed. Tea. Bed. NOW.',
+    '{t}! Christ alive. Kettle on, big glass of water, and get to bed before you do something stupid.',
+    'It’s {t}. The only people up now are bakers and idiots, and you’re not baking. Cup of tea, then bed.',
+  ];
+  const lastPick = {};
+  const pick = (key, arr) => {   // random, but never the same line twice in a row
+    let i = Math.floor(Math.random() * arr.length);
+    if (arr.length > 1 && i === lastPick[key]) i = (i + 1) % arr.length;
+    lastPick[key] = i; return arr[i];
+  };
+  function maybeNag(dayUnits) {
+    const idx = NAG_TIERS.map(t => dayUnits >= t.min).lastIndexOf(true);
+    if (idx < 0) return;
+    const tier = NAG_TIERS[idx];
+    const now = new Date(), h = now.getHours();
+    const t = now.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+    const u = fmtU(dayUnits);
+    $('nag').style.setProperty('--nagc', tier.colour);
+    $('nagEmoji').textContent = tier.emoji;
+    $('nagUnits').textContent = `${u} units today`;
+    $('nagTitle').textContent = pick('t' + idx, tier.titles);
+    $('nagMsg').textContent = pick('m' + idx, tier.msgs).replace(/\{u\}/g, u);
+    const late = h >= 22 || h < DAY_ROLLOVER_HOUR, veryLate = h < DAY_ROLLOVER_HOUR;
+    $('nagTea').classList.toggle('hidden', !late);
+    if (late) $('nagTea').textContent = '☕ ' + pick(veryLate ? 'tl' : 'tea', veryLate ? TEA_LATE : TEA).replace(/\{t\}/g, t);
+    $('nagOk').textContent = pick('o' + idx, tier.ok);
+    const card = $('nagCard');
+    card.classList.remove('shake'); void card.offsetWidth;   // restart the animation
+    card.classList.toggle('shake', !!tier.shake);
+    $('nag').classList.remove('hidden');
+    if (navigator.vibrate) setTimeout(() => navigator.vibrate(idx >= 4 ? [120, 80, 120, 80, 240] : idx >= 2 ? [80, 60, 80] : 40), 60);
+  }
+  const closeNag = () => $('nag').classList.add('hidden');
+  $('nagOk').onclick = closeNag;
+  $('nag').onclick = e => { if (e.target === $('nag')) closeNag(); };
+
   function logDrink(id, qty = 1, day) {
     const d = state.drinks.find(x => x.id === id);
     if (!d) return;
@@ -717,9 +834,10 @@
     renderAll();
     const u = unitsOf(d.ml, d.abv) * qty;
     toast(`Added ${qty > 1 ? qty + ' × ' : ''}${d.name} (${fmtU(u)} units)`, () => {
-      state.log = state.log.filter(e => !added.includes(e.id)); save(); renderAll();
+      state.log = state.log.filter(e => !added.includes(e.id)); save(); renderAll(); closeNag();
     });
     if (navigator.vibrate) navigator.vibrate(30);
+    if (day === today && u > 0) maybeNag(dayTotals(today).units);   // only nag for drinks logged for tonight
   }
 
   $('addBtn').onclick = () => {
