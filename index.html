@@ -313,6 +313,10 @@
 <section id="tab-level" class="hidden">
   <div class="card">
     <h2>Blood alcohol · rough guide</h2>
+    <div class="seg" id="segLimits" style="margin-bottom:12px">
+      <button data-v="uk">🇬🇧 UK limits</button>
+      <button data-v="es">🇪🇸 Spain limits</button>
+    </div>
     <div id="lvlEmpty" class="lvl-empty hidden"></div>
     <div id="lvlBody">
       <div class="lvl-now">
@@ -321,8 +325,8 @@
       </div>
       <svg id="lvlChart" class="lvl-chart" viewBox="0 0 340 190" role="img" aria-label="Estimated blood alcohol level over time"></svg>
       <div class="legend">
-        <span><i style="background:var(--bad)"></i>80 · England, Wales &amp; NI drink-drive limit</span>
-        <span><i style="background:var(--warn)"></i>50 · Scotland</span>
+        <span><i style="background:var(--bad)"></i><span id="legHi"></span></span>
+        <span><i style="background:var(--warn)"></i><span id="legLo"></span></span>
       </div>
       <table class="lvl-table"><tbody id="lvlTable"></tbody></table>
     </div>
@@ -804,7 +808,13 @@
   const drinkMins = e => e.abv < 8
     ? Math.max(15, Math.min(60, e.ml / 568 * 30))
     : Math.max(20, Math.min(180, e.ml * 0.16));
-  const LIMIT_E = 80, LIMIT_S = 50;
+  const LIMITS = {
+    uk: { hi: 80, lo: 50, hiRow: 'Under the 80 limit', loRow: 'Under Scotland’s 50', loTag: 'over Scotland’s limit',
+          hiLeg: '80 · England, Wales & NI drink-drive limit', loLeg: '50 · Scotland' },
+    es: { hi: 50, lo: 30, hiRow: 'Under Spain’s 50 limit', loRow: 'Under 30 (new drivers)', loTag: 'over Spain’s new-driver limit',
+          hiLeg: '50 · Spain drink-drive limit', loLeg: '30 · Spain, new (under 2 yrs) & professional drivers' },
+  };
+  const limits = () => LIMITS[state.limits] || LIMITS.uk;
   const bodyOf = () => {
     const b = state.body || {};
     return { kg: b.kg >= 30 ? b.kg : 80, sex: b.sex === 'f' ? 'f' : 'm', set: b.kg >= 30, unit: b.unit === 'kg' ? 'kg' : 'st' };
@@ -858,17 +868,20 @@
     return d.toLocaleDateString('en-GB', { weekday: 'short' }) + ' ' + hm;
   };
   const inHours = ms => { const m = Math.round(ms / 60e3); return m < 60 ? `in ${m} min` : `in ${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
-  const lvlDesc = mg =>
+  const lvlDesc = (mg, L) =>
     mg < 1 ? ['Nothing in your system', 'var(--good)'] :
-    mg < 20 ? ['Barely touched the sides', 'var(--good)'] :
-    mg < LIMIT_S ? ['Merry', 'var(--good)'] :
-    mg < LIMIT_E ? ['Tipsy · over Scotland’s limit', 'var(--warn)'] :
+    mg < Math.min(20, L.lo) ? ['Barely touched the sides', 'var(--good)'] :
+    mg < L.lo ? ['Merry', 'var(--good)'] :
+    mg < L.hi ? ['Tipsy · ' + L.loTag, 'var(--warn)'] :
     mg < 150 ? ['Drunk · over the limit', 'var(--bad)', 1] :
     mg < 250 ? ['Very drunk', 'var(--bad)', 1] :
                ['Dangerously drunk', 'var(--bad)', 1];
 
   function renderLevel() {
     if (!$('tab-level')) return;
+    const LM = limits();
+    $('segLimits').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === (state.limits || 'uk')));
+    $('legHi').textContent = LM.hiLeg; $('legLo').textContent = LM.loLeg;
     const now = Date.now();
     const pts = bacCurve(now);
     const nowIdx = pts ? Math.min(pts.length - 1, Math.max(0, Math.round((now - pts[0].t) / 60e3))) : -1;
@@ -894,10 +907,10 @@
     sess.forEach(p => { if (p.mg > pk.mg) pk = p; });
     const end = sess[sess.length - 1];
     const below = lim => { if (pk.mg < lim) return null; const p = sess.find(p => p.t > pk.t && p.mg < lim); return p ? p.t : end.t; };
-    const b80 = below(LIMIT_E), b50 = below(LIMIT_S);
+    const bHi = below(LM.hi), bLo = below(LM.lo);
 
     // headline
-    const [desc, col, solid] = lvlDesc(nowMg);
+    const [desc, col, solid] = lvlDesc(nowMg, LM);
     $('lvlNow').textContent = Math.round(nowMg);
     const tag = $('lvlTag');
     tag.textContent = desc; tag.style.setProperty('--lc', col); tag.classList.toggle('solid', !!solid);
@@ -908,8 +921,8 @@
     const rows = [
       [past(pk.t) ? 'Peaked' : 'Peak expected', `${Math.round(pk.mg)} mg<small>at ${esc(fmtTime(pk.t))}</small>`],
       [past(pk.t) ? 'Falling since' : 'Starts to fall', when(pk.t)],
-      ['Under the 80 limit', b80 === null ? 'Never over' : (past(b80) ? 'Since ' : '') + when(b80)],
-      ['Under Scotland’s 50', b50 === null ? 'Never over' : (past(b50) ? 'Since ' : '') + when(b50)],
+      [LM.hiRow, bHi === null ? 'Never over' : (past(bHi) ? 'Since ' : '') + when(bHi)],
+      [LM.loRow, bLo === null ? 'Never over' : (past(bLo) ? 'Since ' : '') + when(bLo)],
       ['Back to zero', when(end.t)],
     ];
     $('lvlTable').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
@@ -935,8 +948,8 @@
       if (hr % every) continue;
       g += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${String(hr).padStart(2, '0')}:00</text>`;
     }
-    g += `<line class="lim50" x1="${L}" x2="${W - R}" y1="${y(LIMIT_S)}" y2="${y(LIMIT_S)}"/>`;
-    g += `<line class="lim80" x1="${L}" x2="${W - R}" y1="${y(LIMIT_E)}" y2="${y(LIMIT_E)}"/>`;
+    g += `<line class="lim50" x1="${L}" x2="${W - R}" y1="${y(LM.lo)}" y2="${y(LM.lo)}"/>`;
+    g += `<line class="lim80" x1="${L}" x2="${W - R}" y1="${y(LM.hi)}" y2="${y(LM.hi)}"/>`;
     g += `<path class="area" d="${path(thin)}L${x(end.t)},${y(0)}L${x(thin[0].t)},${y(0)}Z"/>`;
     g += `<path class="line" d="${path(pastPts)}"/><path class="line future" d="${path(futPts)}"/>`;
     g += `<circle class="peakdot" cx="${x(pk.t)}" cy="${y(pk.mg)}" r="4"/>`;
@@ -964,6 +977,7 @@
       : 'Not set yet – the estimate is assuming an 80 kg (12 st 8 lb) man. Add yours for a better guess.';
   }
   let bodySex = null, bodyUnit = null;
+  $('segLimits').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { state.limits = b.dataset.v; save(); renderLevel(); } };
   $('segSex').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { bodySex = b.dataset.v; renderBody(); } };
   $('segWUnit').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { bodyUnit = b.dataset.v; renderBody(); } };
   $('saveBody').onclick = () => {
