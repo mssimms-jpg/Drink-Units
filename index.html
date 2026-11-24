@@ -352,7 +352,7 @@
   </div>
 
   <div class="card">
-    <p class="lvl-warn">⚠️ <b>A rough guide only – never use it to decide whether you're fit to drive.</b> It assumes each drink is finished within 30 minutes of logging it, then uses a standard formula (Widmark) with average absorption and an average body clearing about 15mg/100ml an hour – roughly a unit an hour. Food, health, medication, tiredness and plain individual differences can change the real figure a lot, and you can be impaired well under the limit, or still over it the next morning.</p>
+    <p class="lvl-warn">⚠️ <b>A rough guide only – never use it to decide whether you're fit to drive.</b> It assumes you start each drink when you log it and finish it in about 30 minutes for a pint (a bit less for cans and bottles), 20–40 minutes for a glass of wine, an hour for a half bottle and two hours for a bottle – or sooner, if you log your next drink first. It then uses a standard formula (Widmark) with average absorption and an average body clearing about 15mg/100ml an hour – roughly a unit an hour. Food, health, medication, tiredness and plain individual differences can change the real figure a lot, and you can be impaired well under the limit, or still over it the next morning.</p>
   </div>
 </section>
 
@@ -795,9 +795,15 @@
   function renderAll() { $('fTarget').value = target(); renderSelect(); renderToday(); renderWeek(); renderDrinks(); renderLevel(); renderBody(); }
 
   // ---- blood alcohol estimate: Widmark formula with gradual absorption ----
-  // Each logged drink is drunk evenly over 30 min from when it's logged, absorbed from the stomach at a
-  // first-order rate, and cleared from the blood at a steady rate. All figures are mg alcohol per 100ml blood.
-  const BAC = { r: { m: 0.68, f: 0.55 }, ka: 3, beta: 15, drinkMins: 30 }; // ka per hour; beta mg/100ml per hour
+  // Each logged drink is drunk evenly from when it's logged, over a time that depends on its size (see drinkMins),
+  // but logging the next drink means the last one's finished. Alcohol is absorbed from the stomach at a
+  // first-order rate and cleared from the blood at a steady rate. All figures are mg alcohol per 100ml blood.
+  const BAC = { r: { m: 0.68, f: 0.55 }, ka: 3, beta: 15 }; // ka per hour; beta mg/100ml per hour
+  // Beer & cider: a pint (or large can) takes 30 min, smaller ones pro rata (440ml can ≈ 23 min, 330ml ≈ 17), at least 15.
+  // Wine & anything stronger: 125ml glass 20 min, 175ml 28, 250ml 40, half bottle 1 hour, bottle 2 hours (max 3).
+  const drinkMins = e => e.abv < 8
+    ? Math.max(15, Math.min(60, e.ml / 568 * 30))
+    : Math.max(20, Math.min(180, e.ml * 0.16));
   const LIMIT_E = 80, LIMIT_S = 50;
   const bodyOf = () => {
     const b = state.body || {};
@@ -809,19 +815,32 @@
   function bacCurve(now) {
     const { kg, sex } = bodyOf();
     const vol = BAC.r[sex] * kg;                    // grams / vol × 100 = mg per 100ml
-    const drinks = state.log
+    const raw = state.log
       .filter(e => e.units > 0 && e.ts > now - 864e5 && e.ts <= now + 6e4 && loggedLive(e))
-      .map(e => ({ start: e.ts, g: e.units * 8 }))   // 1 UK unit = 8g alcohol
-      .sort((a, b) => a.start - b.start);
-    if (!drinks.length) return null;
-    const step = 60e3, dur = BAC.drinkMins * 60e3;
+      .sort((a, b) => a.ts - b.ts);
+    if (!raw.length) return null;
+    const drinks = [];
+    for (const e of raw) {
+      const prev = drinks[drinks.length - 1], dur = drinkMins(e) * 60e3;
+      let start = e.ts;
+      if (prev && e.ts - prev.ts < 60e3) start = prev.end;   // logged together (e.g. qty 3): drunk one after another
+      else drinks.forEach(d => {                              // a new drink means everything before it is finished
+        if (d.start >= start) { d.start = start - 60e3; d.end = start; }
+        else if (d.end > start) d.end = Math.max(start, d.start + 60e3);
+      });
+      drinks.push({ ts: e.ts, start, end: start + dur, g: e.units * 8 });   // 1 UK unit = 8g alcohol
+    }
+    const step = 60e3;
     const absorb = 1 - Math.exp(-BAC.ka / 60);       // share of the stomach absorbed each minute
     const clear = BAC.beta / 100 * vol / 60;         // grams cleared per minute
-    const lastIn = drinks[drinks.length - 1].start + dur;
-    let gut = 0, blood = 0, t = drinks[0].start;
+    const lastIn = Math.max(...drinks.map(d => d.end));
+    let gut = 0, blood = 0, t = Math.min(...drinks.map(d => d.start));
     const pts = [];
     for (let i = 0; i < 60 * 60; i++) {              // at most 60 hours
-      for (const d of drinks) if (t >= d.start && t < d.start + dur) gut += d.g * step / dur;
+      for (const d of drinks) {                      // the share of each drink swallowed this minute
+        const ov = Math.min(t + step, d.end) - Math.max(t, d.start);
+        if (ov > 0) gut += d.g * ov / (d.end - d.start);
+      }
       const a = gut * absorb; gut -= a; blood = Math.max(0, blood + a - clear);
       pts.push({ t, mg: blood / vol * 100 });
       t += step;
