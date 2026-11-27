@@ -649,10 +649,49 @@
     sel.innerHTML = abc.map(d => `<option value="${d.id}">${esc(drinkLabel(d))}</option>`).join('');
     if (prev && state.drinks.some(d => d.id === prev)) sel.value = prev;
 
-    const top = sorted.filter(d => counts[d.id]).slice(0, 4);
+    const top = sorted.filter(d => counts[d.id]).slice(0, 6);   // a couple of spares in case the top 4 won't fit
     $('quickChips').innerHTML = top.map(d =>
-      `<button class="chip" data-quick="${d.id}">+ ${esc(d.name)} ${esc(serveOf(d).toLowerCase())}</button>`).join('');
+      `<button class="chip" data-quick="${d.id}" title="${esc(drinkLabel(d))}">+ ${esc(chipLabel(d))}</button>`).join('');
+    packChips();
   }
+
+  // short labels for the quick-add buttons, e.g. "Foster's 440 can", "White wine 175ml", "Lucky Saint AF 330"
+  function chipLabel(d) {
+    const name = d.name.replace(/\s*\(alcohol[- ]free\)/i, ' AF');
+    const serve = d.serve === LARGE_CAN ? '568 can' : ({ 568: 'pint', 284: 'half', 440: '440 can', 500: '500 can', 330: '330',
+      125: '125ml', 175: '175ml', 250: '250ml', 375: '½ bottle', 750: 'bottle' }[d.ml] || (d.serve || d.ml + 'ml').toLowerCase());
+    return `${name} ${serve}`;
+  }
+
+  // Quick-add buttons: show up to 4 of the most-used drinks on at most 2 rows. Order is ignored, so try every
+  // arrangement and pick the set that fits, favouring the most-used drinks; drop the least-used if 4 can't fit.
+  function packChips() {
+    const box = $('quickChips'), chips = [...box.children];
+    const W = box.clientWidth;
+    if (!chips.length || !W) return;                 // hidden (another tab is showing) – packed again when it's shown
+    chips.forEach(c => c.classList.remove('hidden'));
+    const GAP = 6, w = chips.map(c => c.getBoundingClientRect().width);
+    const rows = order => {                          // how many rows these chips wrap onto, in this order
+      let n = 1, x = 0;
+      for (const i of order) { const add = (x ? GAP : 0) + w[i]; if (x && x + add > W + 0.5) { n++; x = w[i]; } else x += add; }
+      return n;
+    };
+    const perms = a => a.length < 2 ? [a] : a.flatMap((v, i) => perms([...a.slice(0, i), ...a.slice(i + 1)]).map(p => [v, ...p]));
+    const combos = (a, k) => k === 0 ? [[]] : a.length < k ? [] : [...combos(a.slice(1), k - 1).map(c => [a[0], ...c]), ...combos(a.slice(1), k)];
+    const idx = chips.map((_, i) => i);
+    let best = null;
+    for (let k = Math.min(4, chips.length); k > 0 && !best; k--) {
+      // try sets with the most-used drinks first (lowest total rank), keeping the most-used first in each row where possible
+      for (const set of combos(idx, k).sort((a, b) => a.reduce((s, v) => s + v, 0) - b.reduce((s, v) => s + v, 0))) {
+        const fit = perms(set).find(p => rows(p) <= 2);
+        if (fit) { best = fit; break; }
+      }
+    }
+    best = best || [0];
+    chips.forEach((c, i) => c.classList.toggle('hidden', !best.includes(i)));
+    best.forEach(i => box.appendChild(chips[i]));
+  }
+  window.addEventListener('resize', () => packChips());
 
   function renderToday() {
     const today = drinkingDay();
@@ -1284,6 +1323,7 @@
     if (dir) { void sec.offsetWidth; sec.classList.add(dir > 0 ? 'in-right' : 'in-left'); }
     if (name === 'week') renderWeek();
     if (name === 'level') renderLevel();
+    if (name === 'today') packChips();
     window.scrollTo(0, 0);
   }
   document.querySelector('nav.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); };
